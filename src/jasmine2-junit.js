@@ -16,12 +16,11 @@
 
     getJasmineRequireObj().JUnitXmlReporter = function() {
 
-
         function JUnitXmlReporter(options) {
             var runStartTime;
             var specStartTime;
             var suiteLevel = -1;
-            var suites = []
+            var suites = [];
             var currentSuite;
             var totalNumberOfSpecs;
             var totalNumberOfFailures;
@@ -32,7 +31,7 @@
             };
 
             this.jasmineDone = function() {
-                console.log('Jasmine ran in ', elapsed(runStartTime, new Date()), ' seconds')
+                console.log('Jasmine ran in ', elapsed(runStartTime, new Date()), ' seconds');
                 window.done = true
             };
 
@@ -53,7 +52,7 @@
             this.suiteDone = function(result) {
                 if (suiteLevel == 0) {
                     currentSuite.endTime = new Date();
-                    writeFile('.', descToFilename(result.description), suiteToJUnitXml(currentSuite))
+                    writeFile('.', descToFilename(result.description), suiteToJUnitXml(currentSuite,result.description))
                 }
                 suiteLevel--;
             };
@@ -89,19 +88,18 @@
         return result.status === 'pending'
     }
 
-    function suiteToJUnitXml(suite) {
+    function suiteToJUnitXml(suite,description) {
         var resultXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-        resultXml += '<testsuites>\n';
-        resultXml += '\t<testsuite tests="' + suite.noOfSpecs + '" errors="0" failures="' + suite.noOfFails + '" time="' + elapsed(suite.startTime, suite.endTime) + '" timestamp="' + ISODateString(suite.startTime) + '">\n'
+        resultXml += '\t<testsuite tests="' + suite.noOfSpecs + '" errors="0" failures="' + suite.noOfFails + '" name="' + description + '" time="' + elapsed(suite.startTime, suite.endTime) + '" timestamp="' + ISODateString(suite.startTime) + '">\n'
         for (var i = 0; i < suite.specs.length; i++) {
-            resultXml += specToJUnitXml(suite.specs[i], suite.id);
+            resultXml += specToJUnitXml(suite.specs[i], suite.id,description);
         }
-        resultXml += '\t</testsuite>\n</testsuites>\n\n'
+        resultXml += '\t</testsuite>\n\n';
         return resultXml;
     }
 
-    function specToJUnitXml(spec, suiteId) {
-        var xml = '\t\t<testcase classname="' + suiteId +
+    function specToJUnitXml(spec, suiteId,description) {
+        var xml = '\t\t<testcase classname="' + description +
             '" name="' + escapeInvalidXmlChars(spec.description) + '" time="' + elapsed(spec.startTime, spec.endTime) + '">\n';
         if (isSkipped(spec)) {
             xml += '\t\t\t<skipped />\n';
@@ -109,13 +107,13 @@
         if (isFailed(spec)) {
             xml += failedToJUnitXml(spec.failedExpectations)
         }
-        xml += '\t\t</testcase>\n'
+        xml += '\t\t</testcase>\n';
         return xml;
     }
 
     function failedToJUnitXml(failedExpectations) {
         var failure;
-        var failureXml = ""
+        var failureXml = "";
         for (var i = 0; i < failedExpectations.length; i++) {
             failure = failedExpectations[i];
             failureXml += '\t\t\t<failure type="' + failure.matcherName + '" message="' + trim(escapeInvalidXmlChars(failure.message)) + '">\n';
@@ -136,11 +134,11 @@
         }
 
         return d.getFullYear() + '-' +
-            pad(d.getMonth() + 1) + '-' +
-            pad(d.getDate()) + 'T' +
-            pad(d.getHours()) + ':' +
-            pad(d.getMinutes()) + ':' +
-            pad(d.getSeconds());
+        pad(d.getMonth() + 1) + '-' +
+        pad(d.getDate()) + 'T' +
+        pad(d.getHours()) + ':' +
+        pad(d.getMinutes()) + ':' +
+        pad(d.getSeconds());
     }
 
     function elapsed(startTime, endTime) {
@@ -188,11 +186,10 @@
                 var fd = fs.openSync(nodejs_path.join(path, filename), "w");
                 fs.writeSync(fd, text, 0);
                 fs.closeSync(fd);
-                return;
             } catch (error) {
                 console.log('Error writing file', error)
             }
         }
     }
 
-})()
+})();
